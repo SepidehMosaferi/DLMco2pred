@@ -1,0 +1,354 @@
+\documentclass[twocolumn,12]{article}
+
+%packages:
+\usepackage{setspace,graphicx,epstopdf,amsmath,amsfonts,amssymb,amsthm}
+\usepackage{marginnote,datetime,enumitem,subfigure,rotating,fancyvrb}
+\usepackage{float}
+\usepackage[sort&compress,comma,authoryear]{natbib}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue,bookmarks=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{bbm}
+\usepackage[bottom=2cm,top=2cm,left=2cm,right=2cm]{geometry}
+\usepackage{titlesec}
+\usepackage[font={small,it}]{caption}
+\usepackage[utf8]{inputenc}
+\usepackage[titletoc]{appendix}
+
+\titlelabel{\thetitle.\quad}
+\date{}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\doublespacing
+
+\title{\uppercase{\bf Forecasting CO$_2$ Flux at Time-Interval Day-Night Levels in the Midwest}}
+
+\author{\textsc{Sepideh Mosaferi} \\\textit{Department of Statistics, Iowa State University}}
+
+
+\setstretch{1.0}
+
+\twocolumn[
+\begin{@twocolumnfalse}
+\maketitle
+\begin{abstract}
+
+\noindent We are motivated by a data set related to the CO$_2$ flux measurements obtained from an eddy covariance device which are often non-stationary in space and time and require careful modeling to effectively predict or forecast the amount of CO$_2$ flux at the level of interested areas and/or state indicators identified by time.
+For this particular project, we access the CO$_2$ measurements over corn-crop areas in Midwest, which is pretty rich in length of time with different seasonal and day/night time pattern. Based on this motivation, we allow a site-specific time series model as the locations are not available in such a way to effectively consider time as a state indicator and to propose a Bayesain model to predict and eventually forecast the aggregated amount of CO$_2$ flux at time interval levels.
+We evaluate the point uncertainty of predicted values and the overall uncertainty of our proposd model via the standard mean squared error and desirable plots. Finally, the ten step ahead of forecasting values will be provided.   
+
+\vspace{0.25cm}
+\noindent KEY WORDS and PHRASES: Dynamic Linear Model; Eddy-Covariance; Bayesian Time Modeling; State Modeling; MCMC.
+\end{abstract}
+\end{@twocolumnfalse}
+
+]
+
+\vspace{1cm}
+
+\section{Introduction} \label{sec:introduction}
+We are motivated by a data set that occasionally exist in the environmental studies such as moisture flux across an air-water interface in meterology, wind process, etc. These set of data typically contain measurement errors and/or biases as the devices used for measuring the amounts are not perfect.
+We are primarly interested in the CO$_2$ flux measurements which can be obtained from different devices. One of these devices called \textit{eddy-covariance}, and it presents the amount of CO$_2$ flux as the mean
+covariance between deviations in instantaneous vertical wind speed and density of CO$_2$ in the air.
+A positive measure corresponds to an increased amount of CO$_2$ in the air while a negative measure corresponds to a decreased amount. 
+
+Usually CO$_2$ flux measures are at the micro-levels, so-called fine scales in the spatial terminology. While these measurements do not exist for all fine scales nested in the large regions, one might be interested in predicting their amounts for aggregated time intervals  as our state indicator) through an appropriate model. Therefore, we propose an effective model in which we combine the adjacent data fine points based upon the day-night time stamp in the Summer 2015 to produce a large scale state levels\footnote{This term is related to the Dynamic Linear System and will be defined further.} and predict the amount of CO$_2$ at these levels.
+The available data could be variable in time, and a hierarchical Bayesian state dynamic model could be appropriate for this data set.
+We can also reflect the uncertainty of model into the choice of prior specification (e.g., \cite{wikle1998hierarchical} and \cite{wikle2001spatiotemporal}).
+
+We specify the observed measures of CO$_2$ flux in the first stage of the proposed hierarchical model. In the second stage of the model, we allow state-specific time series model and incorporate the time dynamic terms to generate temporal dependencies and/or interactions (if needed). The reminder stages of the hierarchical model are related to completing the Bayesian formulation and specifying the priors on un-known parameters. We finally evaluate the proposed model and predicted values with appropriate measures of uncertainty such as mean squared-error, etc. 
+The rest of the report proceeds as follows. In Section \ref{sec:data}, we explain the available data and conduct some primary data analysis to decide the detailed parts of the model. In Section \ref{sec:model}, we propose the set-up of our hierarchial Bayesian model. Section \ref{sec:result} contains our results and discussion is given in Section \ref{sec:discus}. Some improvements and future works will be provided in Section \ref{sec:future}, and supplementary Figures and Tables will be defered to the Appendices. 
+
+\section{Description of Data Set and Data Analysis} \label{sec:data}
+In this section, we first introduce our available data and some of our main goals. We later aggregate the data set over time intervals effectively to produce desirable state indicators and provide some data analysis. 
+As we mentioned earlier, our data set is related to the CO$_2$ flux measures at the fine levels over corn yields.
+The corn data set is from 2006 until 2015 and the amounts have been measured per every 15 minutes starting from the midnight 24hrs of day. 
+
+The length of data set is 350,592 which reduces to 92,624 after removing the missing values [NAs] \footnote{We made an assumption in which the mechanism of missingness is completely at random and deletion of NAs does not result into a loss of information.}. 
+We should emphasize that we do not access the locations of the data set for any possible space model consideration. As the length of the data set is very large and some of the seasonal and yearly patterns repeated over time, we decide to specifically focus on the data from summer 2015 depicted on Figure \ref{figure1} with the day/night time recognition box-plot as well.
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.4 \textwidth]{Explanatory.pdf} 
+\caption{Panel A) The kernel density plot of CO$_2$ for Summer 2015. The data set is highly left-skewed and majority of values are in the negative range (around $\%$70 of the data set). Panel B) Boxplot of CO$_2$ for day-night time. Observe that the values during the day time cover a wide range compared to the night time, which could be a reason that day and night CO$_2$ flux have different patterns.}
+\label{figure1}
+\end{figure}
+
+Based on Figure \ref{figure1}, we can see the CO$_2$ flux has a left skewed distribution with a very sharp peak (kurtosis>3). The overall range of CO$_2$ is [-3.06,1.28]. In addition, there is a clear dis-similarity between the patterns of data during day time and night time. Therefore, it might be desirable to aggregate the data set in the form of regular average at the day/night level per day to reflect their patterns in the state modeling. As a result, we have 107 points as the information have not been recorded for some of the days. The summary of the aggregated points are given in Table \ref{table1}.
+In addition, more details related to the data set is given on Figure \ref{figure2}. From Figure \ref{figure2}, we can conclude that the data is not highly correlated during the aggregated course of time and the normality assumption does not hold. We applied a Box-Cox transformation on the data and found the value of $\lambda=-0.023$ seems reasonable and makes the data approximately normal. The Box-Cox transformation can be defined as follows:
+
+\begin{equation*}
+y(\lambda)= \left\{
+  \begin{array}{@{}ll@{}}
+    \frac{y^{\lambda}-1}{\lambda} & \qquad if \quad \lambda \neq 0\\
+    log(\lambda) & \qquad if \quad \lambda = 0
+  \end{array}\right.
+\end{equation*}
+in which we apply the first component of the above transformation on the data set.
+
+Based on our further investigation, the amount of CO$_2$ changes over day and night and allowed us to fit a suitable dynamic linear model.
+The main purpose of this research is evaluating the Eddy-Covariance device for forecasting future amounts of CO$_2$ flux measures. This helps scientists to decide whether the device is accurate enough and whether there is a need for more investments in the corp yields to increase the amount of production.
+\begin{table}[ht]
+\centering
+\footnotesize
+\caption{Summary of the 107 aggregated points data for summer 2017} \label{table1}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{llllll}
+\hline\hline
+Min.  & 1st Qu. &  Median &  Mean & 3rd Qu. &  Max. \\\hline
+-1.27317 & -0.94303 & -0.62193 & -0.53104 & -0.09131  & 0.42483\\
+\hline 
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.4\textwidth]{TimeSeries.pdf} 
+\caption{Explanatory results of data analysis. Observe the data is not approximately normal and the ACF and PACF show the data is almost stationarity. In addition, the pattern looks irregular without being specific.}
+\label{figure2}
+\end{figure}
+
+\section{Dynamic Linear Model} \label{sec:model}
+
+Consider a time series ($Y_t$)_{t \geq 1}$, in which we assume there is an un-observable Markov chain ($\theta_t)$, called the state process, and $Y_t$ is a measurement of $\theta_t$ containing error.
+Our dynamic linear model could be specified as follows:
+\begin{equation*}
+\left\{
+  \begin{array}{@{}ll@{}}
+    y_t=F_t \theta_t+\nu_t, & \nu_t \stackrel{iid}{\sim} \mathcal{N}(0,V_t)\\
+    \theta_t=G_t\theta_{t-1}+w_t, & w_t \stackrel{iid}{\sim} \mathcal{N}(0,W_t)
+  \end{array}\right.
+\end{equation*}
+for $t=1,...,n$ where $n=107$. We consider a prior distribution for $\theta_0$,
+\begin{equation*}
+\theta_0 \sim \mathcal{N}(m_0,C_0).
+\end{equation*}
+in which $m_0$ and $C_0$ are known equal to one and we follow the first order linear trend mode. Let's define:
+\begin{equation*}
+V=\sigma^2, \qquad W=\sigma^2_{\beta},
+\end{equation*}
+followed by the notations proposed by \cite{petris}. The unknown parameters are $\theta$\footnote{We call $\theta$ states.} and $\psi=(\sigma^2,\sigma^2_{\beta})^t$. To estimate the un-knowns, we use two methods: 1. Frequentist approach by considering the MLEs; 2. Bayesian approach. The main focus of this manuscript is centered around the second technique.
+
+We can parameterize the variances in the log-scale to ensure positivity, and for simplicity, we assume both the priors of $\sigma^2$ and $\sigma^2_{\beta}$ are independent following an inverse-gamma distribution with shape and scale parameters equal to 1:  
+\begin{equation*}
+\sigma^2 \sim \textit{inv-gamma}(1,1); \qquad \sigma^2_{\beta} \sim \textit{inv-gamma}(1,1).
+\end{equation*}
+The joint posterior distribution is:
+\begin{equation*}
+\pi(\theta_s,\psi|y_{1:t})=\pi(\theta_s|\psi,y_{1:t}) \pi(\psi|y_{1:t}).
+\end{equation*}
+
+After some algebra, we can conclude the following full conditionals for $\sigma^2$ and $\sigma^2_{\beta}$:
+$$
+\pi[\sigma^2|\textit{rest}] \sim \textit{inv-gamma}(1+\frac{T}{2},1+\frac{1}{2}\sum_{t=1}^{T}\nu_t^2),
+$$
+where $\nu_t=Y_t-F\theta_t$, and
+$$
+\pi[\sigma^2_{\beta}|\textit{rest}] \sim \textit{inv-gamma}(1+\frac{T}{2},1+\frac{1}{2}\sum_{t=1}^{T}\omega_t^2),
+$$
+where $\omega_t=\theta_t-G\theta_{t-1}.$
+In addition, the unknown parameters $[\theta|\textit{rest}]$ can be accomplished through 
+\newline \texttt{dlm::dlmBSample} and \texttt{dlm::dlmFilter} in R.
+
+Here, we consider the problems of filtering (when $s = t$), smoothing ($s < t$), and ten-step ahead of forecasting for the states $\theta_{t+k} (k=1,...,10)$. In the following subsection, we provide some details related to the Bayes and model checking.
+
+\subsection{Bayesian Model Checking} \label{sec:Bayesiancheck}
+We have conducted a Gibbs sampler to estimate the unknown parameters. The size of the chain is $10,000$ in which we disgard the first $500$ values as burn-in. The histograms for the posteriors of $\sigma^_2$ and $\sigma^2_{\beta}$ have been provided in Figure \ref{figure3}. Observe that posteriors mainly follow the data and priors do not have any effects on the posteriors\footnote{We have considered the MLEs as the initial values of Gibbs sampler.}. 
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.4\textwidth]{HistogramPosterior.pdf} 
+\caption{Histogram for the posterior of unknown parameters. Observe in both panels, the histograms mainly follow the data sets and the priors (indicated by red color) do not have essential effects on the posteriors.}
+\label{figure3}
+\end{figure}
+
+The ACF and PACF of $\sigma^2$ and $\sigma^2_{\beta}$ from Figure \ref{figure8} in Appendix \ref{app:fig} do not show significant correlations in the ramained part of the chain. Trace plots and density plots for $\sigma^2$ and $\sigma^2_{\beta}$ are also provided in Panel A of Figure \ref{figure10} (See Appendix \ref{app:fig}). The covergency plots for the first two and last two states are given in Panel B of Figure \ref{figure10} (See Appendix \ref{app:fig}). All the results show no lack of convergence. The Geweke's plots and the Z-scores for some of unknown parameters are given in Figure \ref{figure9} and Table \ref{table3}, respectively, which confirm the above-mentioned results. Summary of the unknown parameters $\sigma^2$ and $\sigma^2_{\beta}$ are given in Table \ref{table2}.
+
+
+\begin{table}[ht]
+\centering
+\caption{Summary of the unknown parameters $\sigma^2$ and $\sigma^2_{\beta}$. Observe the amount of correlation between $\sigma^2$ and $\sigma^2_{\beta}$ is not essentially significant.}\label{table2}
+\begin{tabular}{rll}
+  \hline
+ &     Summary of \sigma^2 &   Summary of \sigma^2_{\beta} \\ 
+  \hline
+1 & Min.   :0.1966   & Min.   :0.1728   \\ 
+  2 & 1st Qu.:0.2575   & 1st Qu.:0.2329   \\ 
+  3 & Median :0.2728   & Median :0.2490   \\ 
+  4 & Mean   :0.2742   & Mean   :0.2509   \\ 
+  5 & 3rd Qu.:0.2895   & 3rd Qu.:0.2672   \\ 
+  6 & Max.   :0.3760   & Max.   :0.4086   \\ 
+& correlation ($\sigma^2$ and $\sigma^2_{\beta})$  & 0.0254 \\
+  
+   \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Results of Geweke Diag for the unknown vector $\psi$ and first two and last two states. Observe the Z-scores in which they approximately follow the Normal distribution, and therefore, we can conclude the First and Last part of the Markov chain are independently drawn from the Normal distribution. The Geweke plots of these parameters are given in Figure \ref{figure9} as well.} \label{table3}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{l}
+\hline\hline
+$\sigma^2$: 1.06376 and \sigma^2_{\beta}$: -0.27336\\   
+$\theta_1$: -1.00955 and $\theta_2$: -0.89220\\
+$\theta_{106}$: 0.42399 and $\theta_{107}$: -0.95544\\
+\hline 
+\end{tabular}
+\end{table}
+
+
+The poinwise state level predictions including their point uncertainties are provided in Table \ref{table4} for the first five and last five states. 
+
+\begin{table}[ht]
+\centering
+\tiny
+\caption{Pointwise predicted values and their uncertainties. Observe for most of states the amount of uncertainties are almost the same. Note: The amount of uncertainties have been rounded to the nearest integer.} \label{table4}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{llllll}
+\hline\hline
+ \sigma^2 &  \sigma^2_{\beta} & \theta_1 &  \theta_2 & \theta_3 & \theta_4\\  
+  0.075  &  0.063 &    0.816 &  0.822 &  0.828 &  0.806 \\ 
+ (0.0002) & (0.0003) &  (0.002) & (0.002) & (0.002) & (0.002) \\\hline
+\theta_5 & \theta_{103} &   \theta_{104}  &  \theta_{105} &   \theta_{106}  & \theta_{107} \\
+0.799 & 0.607  &  0.667   & 0.669   & 0.631    &   0.599 \\
+(0.002) & (0.002) & (0.002) & (0.002) &  (0.002)  &   (0.002) \\
+\hline 
+\end{tabular}
+\end{table}
+
+\newpage
+\section{Results and Model Evaluation} \label{sec:result}
+In this Section, we give the main results based on the filtered values ($s=t$), smoothed values ($s<t$) and 10 step ahead forecasting. Specifically forecasting is important to us to know whether our model is appropriate enough for measuring the amount of CO$_2$ in the future. 
+
+\subsection{Kalman Filter Values} \label{sec:filter}
+Based on the proposed DLM, we can define:
+\begin{equation*}
+\theta_{t-1}|y_{1:t-1} \sim \mathcal{N}(m_{t-1},C_{t-1}),
+\end{equation*}
+then the filtering distribution of $\theta_t$ given $y_{1:t}$ is Gaussian, with parameters:
+\begin{equation*}
+m_t=E(\theta_t|y_{1:t})=a_t+R_tF^t_tQ^{-1}_te_t,
+
+\newline
+C_t=Var(\theta_t|y_{1:t})=R_t-R_tF^t_tQ^{-1}_tF_tR_t.
+\end{equation*}
+
+\vspace{0.2cm}
+\noindent We refer an interested reader to \cite{petris} in order to obtain the details related to the above-mentioned equations. We have given the filtered values in Figure \ref{figure4}. In Figure \ref{figure4}, we have also provided the maximum likelihood inference in which we estimated the un-known parameters based on the profile likelihood. We can see the Bayesian inference looks more appropriate as its overall MSE calculated from $\mathbb{E}[(\boldsymbol{Y}-\boldsymbol{\theta})^t(\boldsymbol{Y}-\boldsymbol{\theta})]$ is lower than the MLE one. 
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.5\textwidth]{filter.pdf} 
+\caption{Time series plot of observations and filtered values. Filtered values are obtained based on the MLE and Bayesian techniques. Observe from the Bayesian technique, we can have less amount of MSE.}
+\label{figure4}
+\end{figure}
+
+\subsection{Smoothing Values} \label{sec:smooth}
+A backward recursive algorithm can be used to compute the conditional distributions of $\theta_t$ given $y_{1:T}$ for any $t<T$, starting from the filtering distribution $\pi(\theta_T|y_{1:T})$ and estimating backward all the states $\theta$'s. The smoothing distributions of $\theta_t$ given $y_{1:T}$ can be written as follows:
+\begin{equation*}
+\pi(\theta_t|y_{1:T})=\pi(\theta_t|y_{1:t}) \int \frac{\pi(\theta_{t+1}|\theta_{t})}{\pi(\theta_{t+1}|y_{1:T})}\pi(\theta_{t+1}|y_{1:T})d\theta_{t+1}.
+\end{equation*}
+The smoothed values and the $\%95$ confidence bands are given in Figure \ref{figure5}. We have considered both MLE and Bayesian inference for estimating the unknown parameter vector. The results show that the posterior intervals for the smoothed values are very wider rather than the MLE one as it was expected.
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.5\textwidth]{Smoothedvalue.pdf} 
+\caption{Time-series plot of observations and smoothed values. Smoothed values are computed based on the MLE and Bayesian technique. The posterior confidence band is extremly wider than the MLE one.}
+\label{figure5}
+\end{figure}
+
+In the rest of the this section, we compare the results of filtered values and smoothed values based on the Bayesian inference. The results have been depicted in Figure \ref{figure6}. As we can see, the results show that the smoothed values have greater overall amount of MSEs.
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.45\textwidth]{SmoothFilterBayes.pdf} 
+\caption{Timeseries plot of observations including the filtered and smoothed values, in which both computed from the Bayesian technique. We can observe that the filtered values have less amount of overall MSE compared to the smoothed values.}
+\label{figure6}
+\end{figure}
+
+\subsection{Ten-Step Ahead Forecasting} \label{sec:forecast}
+Here, we are interested in the forecasting future values of the observations $Y_{t+k}$. This is mainly interesting as it could help scientists to decide whether the device can measure the values of CO$_2$ accurately and the future values follow the proposed model. On the other hand, it is a tool for checking the performance of the model. For the one-step ahead, we can use the formula $f_t=\mathbb{E}(Y_t|y_{1:t-1})$ in R from the function \texttt{dlmFilter}. In many applications, we are interested in looking further future and observe the behavior of series for $k$ step ahead, however, the level of uncertainty increases as we move further (i.e. as the amount of $k$ increases).
+
+The $k$-steps-ahead forecast distributions of the state and observation are as follows:
+\begin{equation*}
+\pi(\theta_{t+k}|y_{1:t})=\int \pi(\theta_{t+k}|\theta_{t+k-1})\pi(\theta_{t+k-1}|y_{1:t}) d\theta_{t+k-1},
+\end{equation*}
+\begin{equation*}
+\pi(y_{t+k}|y_{1:t})=\int \pi(y_{t+k}|\theta_{t+k}) \pi(\theta_{t+k}|y_{1:t}) d\theta_{t+k-1}.
+\end{equation*}
+
+As we mentioned earlier, our main purpose is related to the forecasting the future observations. The results for 10-step ahead of forecasting is given in Figure \ref{figure7}. From this Figure, we can see that as the amount of $k$ increases, the amount of uncertainty increases. Therefore, the proposed model might not quite appropriate for forecasting very far away values.
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.5\textwidth]{TenstepaheadF.pdf} 
+\caption{Ten step ahead forecasting. The amount of uncertainty for each point is given under the plot. Observe as $k$ increases, the amount of uncertainty in terms of variance increases and we can less rely on the model for forecasting the future observations.}
+\label{figure7}
+\end{figure}
+
+\section{Discussion} \label{sec:discus}
+we consider a Gaussian dynamic linear model to forecast the amount of CO$_2$ for the future 10 obs (i.e. 5 days and 5 nights). Based on the results, the model might not be appropriate enough for the future forecasting which is important for farmers and scientistis in terms of investment. It might be desirable to extend the model to the some sort of non-Gaussian case before considering a $\lambda$ in the Box-Cox transformation. This might also helps to consider some sort of non-linearity in the model. Looking at the results further, we can see that the distribution of unknown parameters $\sigma^2$ and $\sigma^2_{\beta}$ are quite close and both are not affected by the priors. Therefore, it might be interesting to consider subjective priors based on the data sets that we have from previous years. We can draw plots of information from prevoius summer to see which kind of priors are suitable.
+
+\section{Future Research} \label{sec:future}
+As we mentioned in the Introduction, we access the large set of data from 2006-2015. Some of the values of CO$_2$ flux in the previous years measured differently through other devices and not with the Eddy Covariance. From part of our future research, we are interested in comparison of the accuracy of devices in order to know which one could give us better predicetd and forecasting values. This could help scientists to decide which device has better performance to be used more generally. In addition, it could be interesting to provide some longitudinal study for providing an effective comparison and proposing a time-series model based containing all patterns of years and seasons. However, this could be subject of more computational burden.  
+
+In addition, it may be of interest to consider some measurement error terms in the model which could reflect the errors in the measuring the CO$_2$ through the device and we can put in the second stage of our dynamic hierarchical model. This could brings more variations in the final stage of predicted values, however. As we mentioned previously, the measures are at the fine levels nested in the coarse level (larger scales than the fine scales in the spatial terminology). We could define some sort of multi-scale modeling to predict the amount of CO$_2$ based on modeling the both fine and coarse levels. 
+
+
+\appendix
+\section{Figures and Plots}
+\label{app:fig}
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.4\textwidth]{PartialAutoandAuto_sigmabetasigma.pdf} 
+\caption{auto-correlation and partial auto-correlation plots for $\sigma^2$ and $\sigma^2_{\beta}$. Plots show that the amount of correlations in the Markov chain is not significant enough.}
+\label{figure8}
+\end{figure}
+
+\begin{figure}[ht] 
+\centering   %centering figure
+\includegraphics[width=0.4\textwidth]{Gewekeplot.pdf} 
+\caption{Plot of Geweke's diagnostic. Observe from the plots there is no significant lack of convergency.}
+\label{figure9}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{tabular}{cc}
+\includegraphics[width=70mm]{Sigma2Sigma2beta.pdf} \\
+A \\[6pt]
+\includegraphics[width=70mm]{Convergencyoftheta.pdf}\\
+B \\[6pt]
+\end{tabular}
+\caption{(A) Trace plots and density plots for $\sigm^2$ and $\sigma^2_{\beta}$ (B) Traceplots and density plots for the first two and last two states. Observe in both panels, there is no evidence of lack of convergency.}
+\label{figure10}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\normalsize
+\clearpage
+\bibliographystyle{mychicago}
+\bibliography{Bibliography}
+
+
+
+
+
+\end{document}
